@@ -1,0 +1,557 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><div id="zm-bar" style="position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:12px;padding:8px 14px;background:#16181c;font:600 14px/1.2 Calibri,Carlito,'Segoe UI',system-ui,sans-serif"><a href="index.html" style="color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid #ffa05c;border-radius:6px" aria-label="Zurück zum Hauptmenü"><span aria-hidden="true" style="color:#ffa05c">&#8592;</span> Hauptmenü</a><span style="color:#9aa3ad;font-weight:400">Hochofen-Puzzle</span></div>
+<title>Hochofen-Puzzle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: links die Zeichnung (Längsschnitt mit Schriftfeld), rechts Vorrat, Zuordnungsliste und Erklärung; mobil untereinander */
+:root{
+  --paper:#EDF0F2; --panel:#F9FAFB; --ink:#17222D; --muted:#566471; --line:#B7C2CB;
+  --accent:#2B5F8E; --accent-ink:#FFFFFF;
+  --steel:#C9D1D8; --steel2:#A9B4BD; --bed:#E3E7EA; --coke:#454B52; --lump:#6A727A; --ore:#9A5B3C;
+  --melt:#E9792B; --slag:#D9B84A; --copper:#B87333; --wind:#F2C9A2;
+  --ok:#2E7D4F; --bad:#B8362B;
+  --font-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#10171E; --panel:#18222B; --ink:#E4EAEE; --muted:#93A1AD; --line:#33414D;
+    --accent:#7DB2E3; --accent-ink:#0E1A25;
+    --steel:#3A4753; --steel2:#52606C; --bed:#202A33; --coke:#1C2025; --lump:#3A424B; --ore:#B06A47;
+    --melt:#F08A3C; --slag:#E0C25C; --copper:#D08A4A; --wind:#7A4A2A;
+    --ok:#5FBF86; --bad:#F2796C; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10171E; --panel:#18222B; --ink:#E4EAEE; --muted:#93A1AD; --line:#33414D;
+  --accent:#7DB2E3; --accent-ink:#0E1A25;
+  --steel:#3A4753; --steel2:#52606C; --bed:#202A33; --coke:#1C2025; --lump:#3A424B; --ore:#B06A47;
+  --melt:#F08A3C; --slag:#E0C25C; --copper:#D08A4A; --wind:#7A4A2A;
+  --ok:#5FBF86; --bad:#F2796C; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--font-body);padding-inline:16px;padding-block:22px 44px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:22px}
+header{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;justify-content:space-between}
+.head-text{min-width:0;flex:1 1 320px}
+h1{font:700 clamp(32px,6vw,48px)/1 var(--font-display);letter-spacing:.03em;text-transform:uppercase;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:8px 0 0;max-width:58ch}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--ink);border-radius:4px;overflow:hidden;background:var(--panel)}
+.seg button{font:500 14px var(--font-body);padding:8px 16px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btn{font:500 14px var(--font-body);padding:8px 14px;border:1px solid var(--ink);border-radius:4px;background:var(--panel);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:focus-visible,[data-slot]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:26px;align-items:stretch}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.sheet{border:2px solid var(--ink);background:var(--panel);min-width:0;display:flex;flex-direction:column}
+.sheet #fig{flex:1;display:flex;align-items:center;min-height:0}
+.sheet svg{display:block;width:100%;height:auto;max-height:100%}
+.titleblock{display:grid;grid-template-columns:2fr 1fr 1fr;border-top:2px solid var(--ink);font-size:12px}
+.titleblock div{padding:6px 10px;border-right:1px solid var(--ink);min-width:0}
+.titleblock div:last-child{border-right:0}
+.titleblock small{display:block;color:var(--muted);font:500 10px var(--font-mono);letter-spacing:.08em;text-transform:uppercase}
+.titleblock b{font:600 15px var(--font-display);letter-spacing:.03em}
+.side{display:flex;flex-direction:column;gap:18px;min-width:0}
+.label{font:500 11px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.stats{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;font:500 13px var(--font-mono);font-variant-numeric:tabular-nums}
+.hint{color:var(--muted);font-size:13px;margin:0}
+.bank{display:flex;flex-wrap:wrap;gap:8px;min-height:48px;padding:10px;border:1.5px dashed var(--line);border-radius:6px;background:var(--panel)}
+.bank:empty::after{content:"Alle Bauteile sind verteilt.";color:var(--muted);font-size:13px}
+.chip{font:500 14px var(--font-body);padding:7px 12px;border:1px solid var(--accent);border-radius:5px;background:var(--panel);color:var(--ink);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;text-align:left}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.chip.dragging{opacity:.35}
+.chip.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--panel));cursor:default}
+.chip.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel))}
+.ghost{position:fixed;z-index:60;transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 8px 20px rgb(0 0 0/.28)}
+.slots{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.slot{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center}
+.num{display:grid;place-items:center;width:30px;height:30px;border:1.5px solid var(--ink);border-radius:50%;font:500 13px var(--font-mono);background:var(--panel)}
+.drop{min-height:42px;display:flex;align-items:center;padding:3px;border:1.5px dashed var(--line);border-radius:6px;transition:border-color .15s,background .15s}
+.drop .chip{width:100%}
+.slot.hot .drop{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.slot.hot .num{border-color:var(--accent);color:var(--accent)}
+.slot.done .drop{border-style:solid;border-color:var(--ok)}
+.slot.done .num{background:var(--ok);border-color:var(--ok);color:#fff}
+.slot.wrong .drop{border-color:var(--bad)}
+.slot.nope .drop{animation:shake .4s;border-color:var(--bad)}
+@keyframes shake{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.slot.nope .drop{animation:none}}
+.info{border:1px solid var(--line);background:var(--panel);padding:12px 14px;border-radius:6px;min-height:92px;flex:1}
+.info h3{font:700 22px/1.1 var(--font-display);letter-spacing:.03em;margin:0 0 6px}
+.info p{margin:0;max-width:62ch}
+#msg{margin:0;font-weight:500}
+#msg.good{color:var(--ok)}
+/* SVG */
+.mk{cursor:pointer}
+.mk circle{fill:var(--panel);stroke:var(--ink);stroke-width:1.6}
+.mk text{font:500 12px var(--font-mono);fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.mk.hot circle{stroke:var(--accent);stroke-width:3.4;fill:color-mix(in srgb,var(--accent) 18%,var(--panel))}
+.mk.ok circle{fill:var(--ok);stroke:var(--ok)}
+.mk.ok text{fill:#fff}
+.mk.bad circle{stroke:var(--bad);stroke-width:3.4}
+.lead{stroke:var(--muted);stroke-width:1;fill:none}
+.shell{fill:var(--steel);stroke:var(--ink);stroke-width:2}
+.hollow{fill:var(--bed)}
+.cokeb{fill:var(--coke)}
+.oreb{fill:var(--ore)}
+.lumps{fill:var(--lump)}
+.mfill{fill:var(--melt)}
+.slagf{fill:var(--slag)}
+.part{fill:var(--steel);stroke:var(--ink);stroke-width:1.6}
+.part2{fill:var(--steel2);stroke:var(--ink);stroke-width:1.6}
+.cu{fill:var(--copper);stroke:var(--ink);stroke-width:1.4}
+.windf{fill:var(--wind);stroke:var(--ink);stroke-width:1.2}
+.pipe-o{stroke:var(--ink);stroke-width:14;fill:none;stroke-linejoin:round}
+.pipe-i{stroke:var(--steel);stroke-width:10;fill:none;stroke-linejoin:round}
+.ink-f{fill:var(--ink)}
+.hatch{stroke:var(--ink);stroke-width:1}
+</style>
+<div class="wrap">
+  <header>
+    <div class="head-text">
+      <h1>Hochofen-Puzzle</h1>
+      <p class="sub">Ordne die zwölf Bauteile dem Längsschnitt zu. Ziehe jeden Namen auf die passende Ziffer in der Zeichnung oder in die Liste.</p>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Modus">
+        <button type="button" id="m-uben" aria-pressed="true">Üben</button>
+        <button type="button" id="m-test" aria-pressed="false">Test</button>
+      </div>
+      <button type="button" class="btn primary" id="b-eval" hidden>Auswerten</button>
+      <button type="button" class="btn" id="b-reset">Neu mischen</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <figure class="sheet" style="margin:0">
+      <div id="fig"></div>
+      <div class="titleblock">
+        <div><small>Benennung</small><b>Hochofen, Längsschnitt</b></div>
+        <div><small>Maßstab</small><b>ohne</b></div>
+        <div><small>Blatt</small><b>1 / 1</b></div>
+      </div>
+    </figure>
+
+    <div class="side">
+      <section>
+        <div class="stats"><span id="stat1"></span><span id="stat2"></span></div>
+        <p id="msg" role="status" aria-live="polite"></p>
+        <p class="hint" id="hint"></p>
+      </section>
+      <section>
+        <p class="label">Bauteile</p>
+        <div class="bank" id="bank"></div>
+      </section>
+      <section>
+        <p class="label">Zuordnung</p>
+        <ol class="slots" id="slots"></ol>
+      </section>
+      <section class="info" id="info" aria-live="polite"></section>
+    </div>
+  </div>
+</div>
+<script>
+const PARTS = [
+  {id:1, name:"Gichtverschluss", info:"Glockenverschluss mit Aufgabetrichter. Kleine und große Glocke öffnen abwechselnd, damit beim Beschicken kein Gichtgas entweicht. Möller (Erz und Zuschläge) und Koks gelangen so schichtweise in den Ofen."},
+  {id:2, name:"Gicht", info:"Oberer Ofenabschluss, in dem die Charge aufgegeben wird. Das Gas ist hier nur noch etwa 150 bis 300 °C heiß."},
+  {id:3, name:"Gichtgasleitung", info:"Leitet das Gichtgas ab. Es enthält vor allem CO, CO₂ und Stickstoff und wird nach der Reinigung unter anderem zum Beheizen der Winderhitzer genutzt."},
+  {id:4, name:"Schacht", info:"Nach unten kegelförmig erweitert, damit die absinkende Charge nicht klemmt. Hier werden die Einsatzstoffe getrocknet, vorgewärmt und vom aufsteigenden CO reduziert (indirekte Reduktion)."},
+  {id:5, name:"Kohlensack", info:"Zone mit dem größten Durchmesser. Der Möller erweicht, und es beginnt das Aufschmelzen (etwa 1200 bis 1400 °C)."},
+  {id:6, name:"Rast", info:"Verjüngt sich nach unten, weil das Volumen der Charge beim Schmelzen abnimmt. Hier laufen Schmelzen und direkte Reduktion ab."},
+  {id:7, name:"Gestell", info:"Zylindrischer Sammelraum am Boden. Flüssiges Roheisen (etwa 1500 °C) sammelt sich unten, die leichtere Schlacke schwimmt darauf. Vor den Windformen entstehen bis zu etwa 2000 °C."},
+  {id:8, name:"Windformen", info:"Wassergekühlte Kupferdüsen, durch die der Heißwind ins Gestell strömt. Davor verbrennt der Koks, und es entsteht das reduzierend wirkende CO."},
+  {id:9, name:"Heißwind-Ringleitung", info:"Umgibt den Ofen ringförmig und verteilt den Heißwind gleichmäßig über die Düsenstöcke auf alle Windformen."},
+  {id:10, name:"Winderhitzer", info:"Cowper mit Gittersteinen als Wärmespeicher: Erst wird er mit Gichtgas aufgeheizt, danach strömt kalte Luft hindurch und erreicht etwa 1000 bis 1300 °C. Mehrere Apparate arbeiten im Wechsel."},
+  {id:11, name:"Schlackenabstich", info:"Höher gelegenes Abstichloch. Die Schlacke hat eine geringere Dichte als das Eisen, schwimmt oben und wird hier abgelassen."},
+  {id:12, name:"Eisenabstich", info:"Tiefstes Abstichloch. In Abständen wird es geöffnet, das Roheisen fließt über die Rinne in Pfannen."}
+];
+
+/* Markerposition (x,y) und Zielpunkt der Hilfslinie (tx,ty) in der Zeichnung */
+const MK = {
+  1:{x:186,y:70,tx:234,ty:74},
+  2:{x:176,y:130,tx:210,ty:130},
+  3:{x:512,y:124,tx:440,ty:124},
+  4:{x:128,y:240,tx:181,ty:240},
+  5:{x:512,y:368,tx:414,ty:368},
+  6:{x:512,y:432,tx:397,ty:432},
+  7:{x:512,y:545,tx:380,ty:545},
+  8:{x:152,y:450,tx:196,ty:498},
+  9:{x:512,y:500,tx:460,ty:500},
+  10:{x:57,y:238,tx:57,ty:269},
+  11:{x:100,y:612,tx:140,ty:558},
+  12:{x:512,y:612,tx:446,ty:592}
+};
+
+function buildSvg(){
+  const inner = "M222,110 L222,150 L160,350 L160,385 L196,485 L196,585 L364,585 L364,485 L400,385 L400,350 L338,150 L338,110 Z";
+  const outer = "M208,100 L208,146 L146,350 L146,385 L182,485 L182,599 L378,599 L378,485 L414,385 L414,350 L352,146 L352,100 Z";
+  let bands = "";
+  for (let i = 0; i < 12; i++) {
+    const y = 118 + i * 20;
+    bands += `<path class="cokeb" d="M140,${y} L280,${y+16} L420,${y} L420,${y+10} L280,${y+26} L140,${y+10}Z"/>`;
+    bands += `<path class="oreb" d="M140,${y+10} L280,${y+26} L420,${y+10} L420,${y+20} L280,${y+36} L140,${y+20}Z"/>`;
+  }
+  let lumps = "";
+  for (let i = 0; i < 70; i++) {
+    const x = 200 + (i * 37) % 160, y = 490 + (i * 17) % 46, r = 2 + (i % 3);
+    lumps += `<circle cx="${x}" cy="${y}" r="${r}"/>`;
+  }
+  let marks = "";
+  for (const p of PARTS) {
+    const m = MK[p.id];
+    marks += `<line class="lead" x1="${m.x}" y1="${m.y}" x2="${m.tx}" y2="${m.ty}"/>`;
+    marks += `<circle cx="${m.tx}" cy="${m.ty}" r="2.5" class="ink-f"/>`;
+  }
+  for (const p of PARTS) {
+    const m = MK[p.id];
+    marks += `<g class="mk" data-slot="${p.id}" tabindex="0" role="button" aria-label="Position ${p.id}"><circle cx="${m.x}" cy="${m.y}" r="13"/><text x="${m.x}" y="${m.y}">${p.id}</text></g>`;
+  }
+  return `<svg viewBox="0 0 560 640" role="img" aria-label="Schematischer Längsschnitt eines Hochofens mit zwölf nummerierten Positionen">
+<defs>
+  <clipPath id="cp"><path d="${inner}"/></clipPath>
+  <linearGradient id="soft" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" style="stop-color:var(--melt);stop-opacity:0"/>
+    <stop offset="1" style="stop-color:var(--melt);stop-opacity:.85"/>
+  </linearGradient>
+  <radialGradient id="glow">
+    <stop offset="0" style="stop-color:var(--melt);stop-opacity:1"/>
+    <stop offset="1" style="stop-color:var(--melt);stop-opacity:0"/>
+  </radialGradient>
+  <pattern id="chk" width="8" height="8" patternUnits="userSpaceOnUse">
+    <rect width="8" height="8" style="fill:var(--steel2)"/>
+    <rect width="5" height="5" x="1.5" y="1.5" style="fill:var(--steel)"/>
+  </pattern>
+  <pattern id="hat" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="8" class="hatch"/>
+  </pattern>
+</defs>
+
+<!-- Fundament -->
+<rect x="164" y="599" width="232" height="22" fill="url(#hat)" stroke="var(--ink)" stroke-width="1.5"/>
+
+<!-- Ofenmantel und Innenraum -->
+<path class="shell" d="${outer}"/>
+<path class="hollow" d="${inner}"/>
+<g clip-path="url(#cp)">
+  ${bands}
+  <rect x="140" y="330" width="280" height="156" fill="url(#soft)"/>
+  <rect x="140" y="485" width="280" height="53" class="cokeb"/>
+  <g class="lumps">${lumps}</g>
+  <ellipse cx="214" cy="500" rx="22" ry="14" fill="url(#glow)"/>
+  <ellipse cx="346" cy="500" rx="22" ry="14" fill="url(#glow)"/>
+  <rect x="140" y="538" width="280" height="22" class="slagf"/>
+  <rect x="140" y="560" width="280" height="26" class="mfill"/>
+</g>
+<path d="${inner}" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+
+<!-- Gichtverschluss -->
+<rect x="276" y="34" width="8" height="24" class="part"/>
+<path class="part" d="M236,58 L324,58 L302,98 L258,98 Z"/>
+<path class="part2" d="M268,98 L292,98 L334,114 L226,114 Z"/>
+
+<!-- Gichtgasleitung -->
+<path class="pipe-o" d="M338,124 L440,124 L440,232"/>
+<path class="pipe-i" d="M338,124 L440,124 L440,232"/>
+<path class="ink-f" d="M430,232 L450,232 L440,250 Z"/>
+
+<!-- Winderhitzer -->
+<path class="part" d="M24,560 L24,292 Q57,248 90,292 L90,560 Z"/>
+<rect x="30" y="296" width="14" height="258" class="windf"/>
+<rect x="46" y="296" width="38" height="258" fill="url(#chk)"/>
+
+<!-- Heißwind: Leitung, Ringe, Düsenstöcke, Windformen -->
+<path class="pipe-o" d="M90,440 L118,440 L118,480"/>
+<path class="pipe-i" d="M90,440 L118,440 L118,480"/>
+<rect x="100" y="480" width="36" height="40" rx="14" class="part"/>
+<rect x="106" y="486" width="24" height="28" rx="9" class="windf"/>
+<rect x="424" y="480" width="36" height="40" rx="14" class="part"/>
+<rect x="430" y="486" width="24" height="28" rx="9" class="windf"/>
+<rect x="136" y="494" width="50" height="12" class="part"/>
+<rect x="374" y="494" width="50" height="12" class="part"/>
+<path class="cu" d="M186,489 L204,496 L204,504 L186,511 Z"/>
+<path class="cu" d="M374,489 L356,496 L356,504 L374,511 Z"/>
+
+<!-- Abstiche -->
+<path class="slagf" stroke="var(--ink)" stroke-width="1.5" d="M182,536 L112,560 L112,572 L182,548 Z"/>
+<path class="mfill" stroke="var(--ink)" stroke-width="1.5" d="M378,566 L452,588 L452,600 L378,580 Z"/>
+
+${marks}
+</svg>`;
+}
+const $ = s => document.querySelector(s);
+const bank = $("#bank"), list = $("#slots"), fig = $("#fig");
+let mode = "uben", correct = 0, errors = 0, selected = null;
+let rows = {}, marks = {}, chips = {};
+
+const INTRO = `<h3>So geht es</h3><p>Ziehe einen Namen auf die passende Ziffer. Alternativ tippst du erst das Bauteil und danach die Ziffer an. Richtige Zuordnungen zeigen hier eine Erklärung.</p>`;
+
+function shuffle(a) {
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function setMsg(t, good) {
+  const m = $("#msg");
+  m.textContent = t || "";
+  m.className = good ? "good" : "";
+}
+
+function showInfo(id) {
+  const p = PARTS.find(x => x.id === id);
+  $("#info").innerHTML = `<h3>${p.id} · ${p.name}</h3><p>${p.info}</p>`;
+}
+
+function updateStats() {
+  if (mode === "uben") {
+    $("#stat1").textContent = `Richtig ${correct} von ${PARTS.length}`;
+    $("#stat2").textContent = `Fehlversuche ${errors}`;
+  } else {
+    const placed = Object.values(rows).filter(r => r.querySelector(".chip")).length;
+    $("#stat1").textContent = `Platziert ${placed} von ${PARTS.length}`;
+    $("#stat2").textContent = correct ? `Richtig ${correct}` : "";
+  }
+}
+
+function setHot(id) {
+  Object.keys(rows).forEach(k => {
+    const on = +k === id;
+    rows[k].classList.toggle("hot", on);
+    marks[k].classList.toggle("hot", on);
+  });
+}
+
+function clearSel() {
+  if (selected) selected.setAttribute("aria-pressed", "false");
+  selected = null;
+}
+
+function toBank(chip) {
+  chip.classList.remove("bad");
+  bank.appendChild(chip);
+  Object.keys(rows).forEach(k => {
+    if (!rows[k].classList.contains("done") && !rows[k].querySelector(".chip")) {
+      rows[k].classList.remove("wrong");
+      marks[k].classList.remove("bad");
+    }
+  });
+  updateStats();
+}
+
+function lockOk(chip, id, quiet) {
+  rows[id].classList.remove("wrong");
+  rows[id].classList.add("done");
+  rows[id].querySelector(".drop").appendChild(chip);
+  chip.classList.remove("bad");
+  chip.classList.add("ok", "locked");
+  chip.setAttribute("aria-pressed", "false");
+  marks[id].classList.remove("bad");
+  marks[id].classList.add("ok");
+  correct++;
+  if (!quiet) showInfo(id);
+}
+
+function place(chip, id) {
+  const row = rows[id];
+  if (!row || row.classList.contains("done")) return;
+  clearSel();
+  if (mode === "uben") {
+    if (+chip.dataset.id === id) {
+      lockOk(chip, id);
+      if (correct === PARTS.length) {
+        setMsg(`Geschafft: alle ${PARTS.length} Bauteile stimmen, bei ${errors} Fehlversuchen.`, true);
+      } else {
+        setMsg("Richtig.", true);
+      }
+    } else {
+      errors++;
+      row.classList.add("nope");
+      marks[id].classList.add("bad");
+      setMsg("Das gehört nicht an diese Position.");
+      setTimeout(() => {
+        row.classList.remove("nope");
+        marks[id].classList.remove("bad");
+      }, 700);
+    }
+  } else {
+    const drop = row.querySelector(".drop");
+    const old = drop.querySelector(".chip");
+    if (old && old !== chip) toBank(old);
+    row.classList.remove("wrong");
+    marks[id].classList.remove("bad");
+    chip.classList.remove("bad");
+    drop.appendChild(chip);
+    setMsg("");
+  }
+  updateStats();
+}
+
+function slotAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  const t = el && el.closest("[data-slot]");
+  return t ? +t.dataset.slot : null;
+}
+
+function attachChip(chip) {
+  chip.addEventListener("pointerdown", e => {
+    if (chip.classList.contains("locked") || e.button > 0) return;
+    const sx = e.clientX, sy = e.clientY;
+    let ghost = null, moved = false;
+    try { chip.setPointerCapture(e.pointerId); } catch (err) {}
+    const move = ev => {
+      if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 6) {
+        moved = true;
+        ghost = chip.cloneNode(true);
+        ghost.classList.add("ghost");
+        ghost.style.width = chip.offsetWidth + "px";
+        document.body.appendChild(ghost);
+        chip.classList.add("dragging");
+      }
+      if (moved) {
+        ghost.style.left = ev.clientX + "px";
+        ghost.style.top = ev.clientY + "px";
+        const id = slotAt(ev.clientX, ev.clientY);
+        setHot(id && !rows[id].classList.contains("done") ? id : -1);
+      }
+    };
+    const end = ev => {
+      chip.removeEventListener("pointermove", move);
+      chip.removeEventListener("pointerup", end);
+      chip.removeEventListener("pointercancel", end);
+      setHot(-1);
+      if (moved) {
+        ghost.remove();
+        chip.classList.remove("dragging");
+        const id = ev.type === "pointerup" ? slotAt(ev.clientX, ev.clientY) : null;
+        if (id) place(chip, id);
+        else if (chip.closest(".drop")) toBank(chip);
+      } else if (ev.type === "pointerup") {
+        if (chip.closest(".drop")) {
+          toBank(chip);
+        } else {
+          const was = selected === chip;
+          clearSel();
+          if (!was) {
+            selected = chip;
+            chip.setAttribute("aria-pressed", "true");
+          }
+        }
+      }
+    };
+    chip.addEventListener("pointermove", move);
+    chip.addEventListener("pointerup", end);
+    chip.addEventListener("pointercancel", end);
+  });
+  chip.addEventListener("click", e => {
+    if (e.detail !== 0 || chip.classList.contains("locked")) return;
+    if (chip.closest(".drop")) { toBank(chip); return; }
+    const was = selected === chip;
+    clearSel();
+    if (!was) { selected = chip; chip.setAttribute("aria-pressed", "true"); }
+  });
+}
+
+function slotActivate(id) {
+  if (selected) place(selected, id);
+  else if (rows[id].classList.contains("done")) showInfo(id);
+}
+
+function evaluate() {
+  let bad = 0, empty = 0, before = correct;
+  PARTS.forEach(p => {
+    const chip = rows[p.id].querySelector(".chip");
+    if (rows[p.id].classList.contains("done")) return;
+    if (!chip) { empty++; return; }
+    if (+chip.dataset.id === p.id) {
+      lockOk(chip, p.id, true);
+    } else {
+      chip.classList.add("bad");
+      rows[p.id].classList.add("wrong");
+      marks[p.id].classList.add("bad");
+      bad++;
+    }
+  });
+  errors += bad;
+  updateStats();
+  const parts = [`${correct} von ${PARTS.length} richtig`];
+  if (bad) parts.push(`${bad} falsch (rot, antippen zum Zurücklegen)`);
+  if (empty) parts.push(`${empty} noch leer`);
+  setMsg(parts.join(", ") + ".", correct === PARTS.length);
+  $("#info").innerHTML = correct === PARTS.length
+    ? `<h3>Alles richtig</h3><p>Tippe auf eine grüne Ziffer, um die Erklärung des Bauteils zu lesen.</p>`
+    : `<h3>Auswertung</h3><p>Grün ist richtig, rot ist falsch. Lege falsche Namen zurück und setze sie neu.</p>`;
+}
+
+function init() {
+  correct = 0; errors = 0; selected = null;
+  rows = {}; marks = {}; chips = {};
+  fig.innerHTML = buildSvg();
+  list.innerHTML = "";
+  bank.innerHTML = "";
+  PARTS.forEach(p => {
+    const li = document.createElement("li");
+    li.className = "slot";
+    li.dataset.slot = p.id;
+    li.tabIndex = 0;
+    li.innerHTML = `<span class="num">${p.id}</span><div class="drop"></div>`;
+    list.appendChild(li);
+    rows[p.id] = li;
+    marks[p.id] = fig.querySelector(`.mk[data-slot="${p.id}"]`);
+  });
+  shuffle(PARTS).forEach(p => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.dataset.id = p.id;
+    b.textContent = p.name;
+    b.setAttribute("aria-pressed", "false");
+    attachChip(b);
+    bank.appendChild(b);
+    chips[p.id] = b;
+  });
+  $("#info").innerHTML = INTRO;
+  setMsg("");
+  $("#hint").textContent = mode === "uben"
+    ? "Üben: Falsche Zuordnungen springen zurück, richtige rasten ein und werden erklärt."
+    : "Test: Setze alle Namen frei und klicke am Ende auf „Auswerten“.";
+  $("#b-eval").hidden = mode !== "test";
+  updateStats();
+}
+
+function setMode(m) {
+  mode = m;
+  $("#m-uben").setAttribute("aria-pressed", String(m === "uben"));
+  $("#m-test").setAttribute("aria-pressed", String(m === "test"));
+  init();
+}
+
+document.addEventListener("click", e => {
+  if (e.target.closest(".chip")) return;
+  const t = e.target.closest("[data-slot]");
+  if (t) slotActivate(+t.dataset.slot);
+});
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const t = e.target.closest && e.target.closest("[data-slot]");
+  if (t) { e.preventDefault(); slotActivate(+t.dataset.slot); }
+});
+document.addEventListener("pointerover", e => {
+  if (e.pointerType === "touch" || document.querySelector(".ghost")) return;
+  const t = e.target.closest && e.target.closest("[data-slot]");
+  setHot(t ? +t.dataset.slot : -1);
+});
+$("#m-uben").addEventListener("click", () => setMode("uben"));
+$("#m-test").addEventListener("click", () => setMode("test"));
+$("#b-reset").addEventListener("click", init);
+$("#b-eval").addEventListener("click", evaluate);
+init();
+</script>
+
+</body></html>
